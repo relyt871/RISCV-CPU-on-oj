@@ -55,14 +55,21 @@ module regfile (
             end
         end
         else if (ready) begin
-            if (lock && lock_rd != 0) begin
+            if (lock && lock_rd != 0 && unlock && unlock_rd == lock_rd) begin
+                val[unlock_rd] <= unlock_val;
                 qi[lock_rd] <= lock_robpos;
                 busy[lock_rd] <= 1;
             end
-            if (unlock && unlock_rd != 0) begin
-                val[unlock_rd] <= unlock_val;  //!!!!!!!!!!!!!!
-                if (qi[unlock_rd] == unlock_robpos) begin
-                    busy[unlock_rd] <= 0;
+            else begin
+                if (lock && lock_rd != 0) begin
+                    qi[lock_rd] <= lock_robpos;
+                    busy[lock_rd] <= 1;
+                end
+                if (unlock && unlock_rd != 0) begin
+                    val[unlock_rd] <= unlock_val;  //!!!!!!!!!!!!!!
+                    if (qi[unlock_rd] == unlock_robpos) begin
+                        busy[unlock_rd] <= 0;
+                    end
                 end
             end
         end
