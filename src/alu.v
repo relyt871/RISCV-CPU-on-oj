@@ -129,15 +129,15 @@ module alu(
                     end
                     `SLLI: begin
                         alu_isjump <= 0;
-                        alu_val <= (rs1 << imm);
+                        alu_val <= (rs1 << imm[5:0]);
                     end
                     `SRLI: begin
                         alu_isjump <= 0;
-                        alu_val <= (rs1 >> imm);
+                        alu_val <= (rs1 >> imm[5:0]);
                     end
                     `SRAI: begin
                         alu_isjump <= 0;
-                        alu_val <= ($signed(rs1) >> imm);
+                        alu_val <= ($signed(rs1) >> imm[5:0]);
                     end
                     `ADD: begin
                         alu_isjump <= 0;
@@ -149,7 +149,7 @@ module alu(
                     end
                     `SLL: begin
                         alu_isjump <= 0;
-                        alu_val <= (rs1 << rs2);
+                        alu_val <= (rs1 << rs2[5:0]);
                     end
                     `SLT: begin
                         alu_isjump <= 0;
@@ -165,11 +165,11 @@ module alu(
                     end
                     `SRL: begin
                         alu_isjump <= 0;
-                        alu_val <= (rs1 >> rs2);
+                        alu_val <= (rs1 >> rs2[5:0]);
                     end
                     `SRA: begin
                         alu_isjump <= 0;
-                        alu_val <= ($signed(rs1) >> rs2);
+                        alu_val <= ($signed(rs1) >> rs2[5:0]);
                     end
                     `OR: begin
                         alu_isjump <= 0;
