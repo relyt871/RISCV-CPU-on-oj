@@ -3,7 +3,8 @@
 module decode (
     input wire decode_flag,
     input wire [`INS_LEN] ins,
-    input wire [`ADDR_LEN] ins_pc,
+    input wire [`PC_LEN] ins_pc,
+    input wire [`PC_LEN] ins_pred_pc,
 
     //send decoded info to issue
     output reg decode_ok,
@@ -11,6 +12,7 @@ module decode (
     output reg [`REG_LEN] rd,
     output reg [`IMM_LEN] imm,
     output reg [`PC_LEN] pc,
+    output reg [`PC_LEN] pred_pc,
 
     //request value from regfile
     output reg rs1_query,
@@ -49,6 +51,7 @@ module decode (
             rs1_pos <= ins[19:15];
             rs2_pos <= ins[24:20];
             pc <= ins_pc;
+            pred_pc <= ins_pred_pc;
             case (opcode)
                 7'b0110111: begin   //37
                     op <= `LUI;
@@ -89,7 +92,6 @@ module decode (
                     rs2_query <= 1;
                 end
                 7'b0000011: begin   //03
-        //if (ins == 32'h5c4ba683) $display("decode %h %h %h %h", ins, ins[19:15], ins[11:7], {{20{ins[31]}}, ins[31:20]});
                     case (func3)
                         3'b000: op <= `LB;
                         3'b001: op <= `LH;

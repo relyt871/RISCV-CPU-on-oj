@@ -83,6 +83,9 @@ module regfile (
         end
         else begin
             rs1_flag <= 1;
+            if (rs1_pos == 15) begin
+                //$display("query 15 %h %h %h", busy[rs1_pos], qi[rs1_pos], val[rs1_pos]);
+            end
             if (!busy[rs1_pos]) begin
                 rs1_type <= 0;
                 rs1_val <= val[rs1_pos];

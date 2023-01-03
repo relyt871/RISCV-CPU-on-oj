@@ -6,7 +6,8 @@ module issue (
     input wire [`OP_LEN] op,
     input wire [`REG_LEN] rd,
     input wire [`IMM_LEN] imm,
-    input wire [`ADDR_LEN] pc,
+    input wire [`PC_LEN] pc,
+    input wire [`PC_LEN] pred_pc,
 
     //get value from regfile
     input wire rs1_flag,
@@ -32,6 +33,7 @@ module issue (
     output reg [`REG_LEN] issue_rd,
     output reg [`IMM_LEN] issue_imm,
     output reg [`PC_LEN] issue_pc,
+    output reg [`PC_LEN] issue_pred_pc,
     output reg [`ROB_LEN] issue_robpos,
     output reg [`LSB_LEN] issue_lsbpos,
     output reg [`DATA_LEN] issue_vj,
@@ -70,6 +72,7 @@ module issue (
             issue_rd <= rd;
             issue_imm <= imm;
             issue_pc <= pc;
+            issue_pred_pc <= pred_pc;
             issue_robpos <= rob_avail_pos;
             issue_lsbpos <= lsb_avail_pos;
             if (rs_avail && op_type == 2'b00 || op_type == 2'b11) begin

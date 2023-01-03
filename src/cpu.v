@@ -49,15 +49,20 @@ wire insq_full;
 wire insq_push;
 wire [`INS_LEN] insq_push_ins;
 wire [`PC_LEN] insq_push_pc;
+wire [`PC_LEN] insq_push_pred_pc;
 
 //fetch - robuffer
 wire jump;
 wire [`PC_LEN] pc_jumpto;
+wire pred_upd;
+wire [`PC_LEN] pred_upd_pc;
+wire pred_res;
 
 //ins-queue - decode
 wire insq_front;
 wire [`INS_LEN] insq_front_ins;
 wire [`PC_LEN] insq_front_pc;
+wire [`PC_LEN] insq_front_pred_pc;
 
 //decode - issue
 wire decode_ok;
@@ -65,6 +70,7 @@ wire [`OP_LEN] decode_op;
 wire [`REG_LEN] decode_rd;
 wire [`IMM_LEN] decode_imm;
 wire [`PC_LEN] decode_pc;
+wire [`PC_LEN] decode_pred_pc;
 
 //decode - regfile
 wire rs1_query;
@@ -111,6 +117,7 @@ wire [`OP_LEN] issue_op;
 wire [`REG_LEN] issue_rd;
 wire [`IMM_LEN] issue_imm;
 wire [`PC_LEN] issue_pc;
+wire [`PC_LEN] issue_pred_pc;
 wire [`ROB_LEN] issue_robpos;
 wire [`LSB_LEN] issue_lsbpos;
 wire [`DATA_LEN] issue_vj;
@@ -156,7 +163,6 @@ wire [`ROB_LEN] lsb_load_robpos;
 
 //alu cdb
 wire alu_flag;
-wire alu_isjump;
 wire [`DATA_LEN] alu_val;
 wire [`DATA_LEN] alu_jumpto;
 wire [`ROB_LEN] alu_robpos;
@@ -206,9 +212,13 @@ fetch Fetch(
   .push(insq_push),
   .push_ins(insq_push_ins),
   .push_pc(insq_push_pc),
+  .push_pred_pc(insq_push_pred_pc),
 
   .jump(jump),
-  .pc_jumpto(pc_jumpto)
+  .pc_jumpto(pc_jumpto),
+  .pred_upd(pred_upd),
+  .pred_upd_pc(pred_upd_pc),
+  .pred_res(pred_res)
 );
 
 ins_queue Ins_Queue(
@@ -220,24 +230,28 @@ ins_queue Ins_Queue(
   .push(insq_push),
   .push_ins(insq_push_ins),
   .push_pc(insq_push_pc),
+  .push_pred_pc(insq_push_pred_pc),
   .full(insq_full),
 
   .decode_ok(decode_ok),
   .front(insq_front),
   .front_ins(insq_front_ins),
-  .front_pc(insq_front_pc)
+  .front_pc(insq_front_pc),
+  .front_pred_pc(insq_front_pred_pc)
 );
 
 decode Decode(
   .decode_flag(insq_front),
   .ins(insq_front_ins),
   .ins_pc(insq_front_pc),
+  .ins_pred_pc(insq_front_pred_pc),
 
   .decode_ok(decode_ok),
   .op(decode_op),
   .rd(decode_rd),
   .imm(decode_imm),
   .pc(decode_pc),
+  .pred_pc(decode_pred_pc),
 
   .rs1_query(rs1_query),
   .rs1_pos(rs1_pos),
@@ -285,6 +299,7 @@ issue Issue(
   .rd(decode_rd),
   .imm(decode_imm),
   .pc(decode_pc),
+  .pred_pc(decode_pred_pc),
 
   .rs1_flag(rs1_flag),
   .rs1_type(rs1_type),
@@ -306,6 +321,7 @@ issue Issue(
   .issue_rd(issue_rd),
   .issue_imm(issue_imm),
   .issue_pc(issue_pc),
+  .issue_pred_pc(issue_pred_pc),
   .issue_robpos(issue_robpos),
   .issue_lsbpos(issue_lsbpos),
   .issue_vj(issue_vj),
@@ -390,7 +406,6 @@ alu ALU(
   .rs2(rs_front_vk),
 
   .alu_flag(alu_flag),
-  .alu_isjump(alu_isjump),
   .alu_val(alu_val),
   .alu_jumpto(alu_jumpto),
   .alu_robpos(alu_robpos)
@@ -412,10 +427,10 @@ robuffer Reorder_Buffer(
   .push_op(issue_op),
   .push_rd(issue_rd),
   .push_pc(issue_pc),
+  .push_pred_pc(issue_pred_pc),
   .push_lsbpos(issue_lsbpos),
 
   .alu_flag(alu_flag),
-  .alu_isjump(alu_isjump),
   .alu_val(alu_val),
   .alu_jumpto(alu_jumpto),
   .alu_robpos(alu_robpos),
@@ -441,7 +456,10 @@ robuffer Reorder_Buffer(
   .lsb_robpos(lsb_load_robpos),
 
   .jump(jump),
-  .pc_jumpto(pc_jumpto)
+  .pc_jumpto(pc_jumpto),
+  .pred_upd(pred_upd),
+  .pred_upd_pc(pred_upd_pc),
+  .pred_res(pred_res)
 );
 
 lsbuffer LoadStore_buffer(

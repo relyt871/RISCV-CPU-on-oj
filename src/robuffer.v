@@ -17,12 +17,12 @@ module robuffer (
     input wire push,
     input wire [`OP_LEN] push_op,
     input wire [`REG_LEN] push_rd,
-    input wire [`ADDR_LEN] push_pc,
+    input wire [`PC_LEN] push_pc,
+    input wire [`PC_LEN] push_pred_pc,
     input wire [`LSB_LEN] push_lsbpos,
 
     //input from ALU
     input wire alu_flag,
-    input wire alu_isjump,
     input wire [`DATA_LEN] alu_val,
     input wire [`DATA_LEN] alu_jumpto,
     input wire [`ROB_LEN] alu_robpos,
@@ -54,11 +54,17 @@ module robuffer (
 
     //need to jump
     output reg jump,
-    output reg [`PC_LEN] pc_jumpto
+    output reg [`PC_LEN] pc_jumpto,
+
+    //predictor update
+    output reg pred_upd,
+    output reg [`PC_LEN] pred_upd_pc,
+    output reg pred_res
 );
     reg [`OP_LEN] rob_op[`ROB_ARR];
     reg [`REG_LEN] rob_rd[`ROB_ARR];
-    reg [`ADDR_LEN] rob_pc[`ROB_ARR];
+    reg [`PC_LEN] rob_pc[`ROB_ARR];
+    reg [`PC_LEN] rob_pred_pc[`ROB_ARR];
     reg [`DATA_LEN] rob_val[`ROB_ARR];
     reg [`LSB_LEN] rob_lsbpos[`ROB_ARR];
     reg rob_isjump[`ROB_ARR];
@@ -116,13 +122,13 @@ module robuffer (
                 rob_op[tail] <= push_op;
                 rob_rd[tail] <= push_rd;
                 rob_pc[tail] <= push_pc;
+                rob_pred_pc[tail] <= push_pred_pc;
                 rob_lsbpos[tail] <= push_lsbpos;
                 cancommit[tail] <= (push_op == `SB || push_op == `SH || push_op == `SW);
                 tail <= ((tail == `ROB_MAX)? 0 : tail + 1);
             end
             if (alu_flag) begin  //update by alu
                 rob_val[alu_robpos] <= alu_val;
-                rob_isjump[alu_robpos] <= alu_isjump;
                 rob_jumpto[alu_robpos] <= alu_jumpto;
                 cancommit[alu_robpos] <= 1;
             end
@@ -131,12 +137,11 @@ module robuffer (
                 cancommit[lsb_robpos] <= 1;
             end
             if (head != tail && cancommit[head]) begin  //commit
-//$display("commit %h", rob_pc[head]);
+//$display("%h", rob_pc[head]);
                 case (rob_op[head])
                     `JAL, `JALR, `BEQ, `BNE, `BLT, `BGE, `BLTU, `BGEU: begin
-                        if (rob_isjump[head]) begin
+                        if (rob_jumpto[head] != rob_pred_pc[head]) begin
                             rob_clear <= 1;
-//$display("clear");
                             jump <= 1;
                             pc_jumpto <= rob_jumpto[head];
                         end
@@ -145,6 +150,7 @@ module robuffer (
                             jump <= 0;
                         end
                         if (rob_op[head] == `JAL || rob_op[head] == `JALR) begin
+                            pred_upd <= 0;
                             unlock <= 1;
                             unlock_rd <= rob_rd[head];
                             unlock_robpos <= head;
@@ -152,12 +158,16 @@ module robuffer (
                         end 
                         else begin
                             unlock <= 0;
+                            pred_upd <= 1;
+                            pred_upd_pc <= rob_pc[head];
+                            pred_res <= (rob_jumpto[head] != rob_pc[head] + 4);
                         end
                         rob_store_flag <= 0;
                     end
                     `SB, `SH, `SW: begin
                         rob_clear <= 0;
                         jump <= 0;
+                        pred_upd <= 0;
                         unlock <= 0;
                         rob_store_flag <= 1;
                         rob_store_lsbpos <= rob_lsbpos[head];
@@ -165,6 +175,7 @@ module robuffer (
                     default: begin
                         rob_clear <= 0;
                         jump <= 0;
+                        pred_upd <= 0;
                         unlock <= 1;
                         unlock_rd <= rob_rd[head];
                         unlock_robpos <= head;

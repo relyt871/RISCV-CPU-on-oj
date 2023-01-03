@@ -15,7 +15,6 @@ module alu(
     input wire[`INT_LEN] rs2,
 
     output reg alu_flag,
-    output reg alu_isjump,
     output reg [`DATA_LEN] alu_val,
     output reg [`DATA_LEN] alu_jumpto,
     output reg [`ROB_LEN] alu_robpos
@@ -31,152 +30,122 @@ module alu(
                 alu_robpos <= robpos;
                 case (op) 
                     `LUI: begin
-                        alu_isjump <= 0;
                         alu_val <= imm;
                     end
                     `AUIPC: begin
-                        alu_isjump <= 0;
                         alu_val <= pc + imm;
                     end
                     `JAL: begin
-                        alu_isjump <= 1;
                         alu_val <= pc + 4;
                         alu_jumpto <= pc + imm;
                     end
                     `JALR: begin
-                        alu_isjump <= 1;
                         alu_val <= pc + 4;
                         alu_jumpto <= (rs1 + imm) & `MINUS_ONE;
                     end
                     `BEQ: begin
                         if (rs1 == rs2) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `BNE: begin
                         if (rs1 != rs2) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `BLT: begin
                         if ($signed(rs1) < $signed(rs2)) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `BGE: begin
                         if ($signed(rs1) >= $signed(rs2)) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `BLTU: begin
-                        //$display("bltu %h %h", rs1, rs2);
                         if (rs1 < rs2) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `BGEU: begin
                         if (rs1 >= rs2) begin
-                            alu_isjump <= 1;
                             alu_jumpto <= pc + imm;
                         end
                         else begin
-                            alu_isjump <= 0;
+                            alu_jumpto <= pc + 4;
                         end
                     end
                     `ADDI: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 + imm;
                     end
                     `SLTI: begin
-                        alu_isjump <= 0;
                         alu_val <= ($signed(rs1) < $signed(rs2));
                     end
                     `SLTIU: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 < imm);
                     end
                     `XORI: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 ^ imm;
                     end
                     `ORI: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 | imm;
                     end
                     `ANDI: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 & imm;
                     end
                     `SLLI: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 << imm[5:0]);
                     end
                     `SRLI: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 >> imm[5:0]);
                     end
                     `SRAI: begin
-                        alu_isjump <= 0;
                         alu_val <= ($signed(rs1) >> imm[5:0]);
                     end
                     `ADD: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 + rs2;
                     end
                     `SUB: begin
-                        alu_isjump <= 0;
                         alu_val <= rs1 - rs2;
                     end
                     `SLL: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 << rs2[5:0]);
                     end
                     `SLT: begin
-                        alu_isjump <= 0;
                         alu_val <= ($signed(rs1) < $signed(rs2));
                     end
                     `SLTU: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 < rs2);
                     end
                     `XOR: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 ^ rs2);
                     end
                     `SRL: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 >> rs2[5:0]);
                     end
                     `SRA: begin
-                        alu_isjump <= 0;
                         alu_val <= ($signed(rs1) >> rs2[5:0]);
                     end
                     `OR: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 | rs2);
                     end
                     `AND: begin
-                        alu_isjump <= 0;
                         alu_val <= (rs1 & rs2);
                     end
                     default: begin
