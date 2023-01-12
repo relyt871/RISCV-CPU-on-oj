@@ -48,23 +48,29 @@ module memctrl (
         else if (clear) begin
             if (busy && type == 1) begin //continue the unfinished write
                 if (now != len) begin
-                    mem_wr <= 1;
                     lsb_mem_out_flag <= 0;
                     icache_mem_out_flag <= 0;
-                    case (now)
-                        2'b00: begin
-                            mem_dout <= towrite[15:8];
-                        end
-                        2'b01: begin
-                            mem_dout <= towrite[23:16];
-                        end
-                        2'b10: begin
-                            mem_dout <= towrite[31:24];
-                        end
-                    endcase
-                    now <= now + 1;
-                    mem_pos <= mem_pos + 1;
-                    mem_a <= mem_pos + 1;
+                    if (io_buffer_full && mem_pos + 1 >= `IO_LIM) begin
+                        mem_a <= 0;
+                        mem_wr <= 0;
+                    end
+                    else begin
+                        case (now)
+                            2'b00: begin
+                                mem_dout <= towrite[15:8];
+                            end
+                            2'b01: begin
+                                mem_dout <= towrite[23:16];
+                            end
+                            2'b10: begin
+                                mem_dout <= towrite[31:24];
+                            end
+                        endcase
+                        now <= now + 1;
+                        mem_pos <= mem_pos + 1;
+                        mem_a <= mem_pos + 1;
+                        mem_wr <= 1;
+                    end
                 end
                 else begin
                     lsb_mem_out_flag <= 1;
@@ -94,19 +100,28 @@ module memctrl (
             end
             else if (!busy) begin  //initialize for next read/write
                 if (lsb_mem_in_flag) begin
-                    busy <= 1;
-                    type <= lsb_mem_type;
-                    bel <= 1;
-                    mem_pos <= lsb_mem_pc;
-                    len <= lsb_mem_len;
-                    now <= 0;
-                    read_stall <= (lsb_mem_type? 0 : 1); //read requires 1 stall for mem_din
-                    towrite <= lsb_mem_output;
-                    mem_a <= lsb_mem_pc;
-                    mem_wr <= lsb_mem_type;
-                    mem_dout <= lsb_mem_output[7:0];
-                    lsb_mem_out_flag <= 0;
-                    icache_mem_out_flag <= 0;
+                    if (io_buffer_full && lsb_mem_type && lsb_mem_pc >= `IO_LIM) begin
+                        mem_a <= 0;
+                        mem_wr <= 0;
+                        mem_dout <= 0;
+                        lsb_mem_out_flag <= 0;
+                        icache_mem_out_flag <= 0;
+                    end
+                    else begin
+                        busy <= 1;
+                        type <= lsb_mem_type;
+                        bel <= 1;
+                        mem_pos <= lsb_mem_pc;
+                        len <= lsb_mem_len;
+                        now <= 0;
+                        read_stall <= (lsb_mem_type? 0 : 1); //read requires 1 stall for mem_din
+                        towrite <= lsb_mem_output;
+                        mem_a <= lsb_mem_pc;
+                        mem_wr <= lsb_mem_type;
+                        mem_dout <= lsb_mem_output[7:0];
+                        lsb_mem_out_flag <= 0;
+                        icache_mem_out_flag <= 0;
+                    end
                 end
                 else if (icache_mem_in_flag) begin
                     busy <= 1;
@@ -187,23 +202,29 @@ module memctrl (
                 end
                 else begin //write
                     if (now != len) begin
-                        mem_wr <= 1;
                         lsb_mem_out_flag <= 0;
                         icache_mem_out_flag <= 0;
-                        case (now)
-                            2'b00: begin
-                                mem_dout <= towrite[15:8];
-                            end
-                            2'b01: begin
-                                mem_dout <= towrite[23:16];
-                            end
-                            2'b10: begin
-                                mem_dout <= towrite[31:24];
-                            end
-                        endcase
-                        now <= now + 1;
-                        mem_pos <= mem_pos + 1;
-                        mem_a <= mem_pos + 1;
+                        if (io_buffer_full && mem_pos + 1 >= `IO_LIM) begin
+                            mem_a <= 0;
+                            mem_wr <= 0;
+                        end
+                        else begin
+                            case (now)
+                                2'b00: begin
+                                    mem_dout <= towrite[15:8];
+                                end
+                                2'b01: begin
+                                    mem_dout <= towrite[23:16];
+                                end
+                                2'b10: begin
+                                    mem_dout <= towrite[31:24];
+                                end
+                            endcase
+                            now <= now + 1;
+                            mem_pos <= mem_pos + 1;
+                            mem_a <= mem_pos + 1;
+                            mem_wr <= 1;
+                        end
                     end
                     else begin
                         lsb_mem_out_flag <= 1;

@@ -81,6 +81,7 @@ module issue (
             end
             else begin
                 rs_push <= 0;
+                rs_push_pos <= 0;
             end
             if (rob_avail) begin
                 rob_push <= 1;
@@ -102,7 +103,15 @@ module issue (
             end
         end
         else begin
+            issue_op <= 0;
+            issue_rd <= 0;
+            issue_imm <= 0;
+            issue_pc <= 0;
+            issue_pred_pc <= 0;
+            issue_robpos <= 0;
+            issue_lsbpos <= 0;
             rs_push <= 0;
+            rs_push_pos <= 0;
             rob_push <= 0;
             lock <= 0;
             lsb_push <= 0;
@@ -116,6 +125,7 @@ module issue (
         end
         else begin
             rs_front <= 0;
+            rs_front_pos <= 0;
         end
     end
 
@@ -125,6 +135,7 @@ module issue (
                 issue_vj <= rs1_val;
                 issue_qj <= 0;
                 rs1_rob_ok <= 0;
+                rs1_robpos <= 0;
             end
             else begin
                 rs1_rob_ok <= 1;
@@ -141,6 +152,7 @@ module issue (
         end
         else begin
             rs1_rob_ok <= 0;
+            rs1_robpos <= 0;
             issue_vj <= 0;
             issue_qj <= 0;
         end
@@ -152,6 +164,7 @@ module issue (
                 issue_vk <= rs2_val;
                 issue_qk <= 0;
                 rs2_rob_ok <= 0;
+                rs2_robpos <= 0;
             end
             else begin
                 rs2_rob_ok <= 1;
@@ -168,6 +181,7 @@ module issue (
         end
         else begin
             rs2_rob_ok <= 0;
+            rs2_robpos <= 0;
             issue_vk <= 0;
             issue_qk <= 0;
         end

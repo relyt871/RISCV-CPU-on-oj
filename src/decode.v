@@ -36,8 +36,15 @@ module decode (
     always @(*) begin
         if (!decode_flag || rob_full || rs_full || lsb_full) begin
             decode_ok <= 0;
+            op <= 0;
+            rd <= 0;
+            imm <= 0;
+            pc <= 0;
+            pred_pc <= 0;
             rs1_query <= 0;
+            rs1_pos <= 0;
             rs2_query <= 0;
+            rs2_pos <= 0;
             rob_getpos <= 0;
             rs_getpos <= 0;
             lsb_getpos <= 0;
@@ -111,6 +118,7 @@ module decode (
                         3'b001: op <= `SH;
                         3'b010: op <= `SW;
                         3'b011: op <= `SD;
+                        default: op <= `WOW;
                     endcase
                     imm <= {{20{ins[31]}}, ins[31:25], ins[11:7]};
                     rs1_query <= 1;
@@ -142,11 +150,15 @@ module decode (
                         3'b110: op <= `OR;
                         3'b111: op <= `AND;
                     endcase
+                    imm <= 0;
                     rs1_query <= 1;
                     rs2_query <= 1;
                 end
                 default: begin
                     op <= `WOW;
+                    imm <= 0;
+                    rs1_query <= 0;
+                    rs2_query <= 0;
                 end
             endcase
         end

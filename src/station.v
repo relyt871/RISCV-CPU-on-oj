@@ -61,10 +61,12 @@ module rsstation (
     integer i;
     always @(*) begin
         if (reset || clear || !getpos) begin
-            rs_avail = 0;
+            rs_avail <= 0;
+            rs_avail_pos <= 0;
         end
         else begin
-            rs_avail = 0;
+            rs_avail <= 0;
+            rs_avail_pos <= 0;
             for (i = 0; i < `RS_SIZ; i = i + 1) begin
                 if (!busy[i]) begin
                     rs_avail <= 1;
@@ -77,10 +79,12 @@ module rsstation (
     integer j;
     always @(*) begin
         if (reset || clear) begin
-            rs_ready = 0;
+            rs_ready <= 0;
+            rs_ready_pos <= 0;
         end
         else begin
-            rs_ready = 0;
+            rs_ready <= 0;
+            rs_ready_pos <= 0;
             for (j = 0; j < `RS_SIZ; j = j + 1) begin
                 if (busy[j]) begin
                     if (!rs_qj[j] && !rs_qk[j]) begin
@@ -101,8 +105,6 @@ module rsstation (
             front_ok <= 0;
             siz <= 0;
             rs_full <= 0;
-            rs_avail <= 0;
-            rs_ready <= 0;
             front_ok <= 0;
         end
         else if (ready) begin

@@ -36,7 +36,7 @@ wire clear;
 wire icache_mem_flag;
 wire [`ADDR_LEN] icache_mem_pc;
 wire mem_icache_flag;
-wire reg [`INS_LEN] icache_mem_ins;
+wire [`INS_LEN] icache_mem_ins;
 
 //ins-cache - fetch
 wire fetch_icache_flag;
@@ -170,6 +170,7 @@ wire [`ROB_LEN] alu_robpos;
 //robuffer - lsbuffer
 wire rob_store_flag;
 wire [`LSB_LEN] rob_store_lsbpos;
+wire [`ROB_LEN] rob_head;
 
 //lsbuffer - mem
 wire lsb_mem_flag;
@@ -451,6 +452,7 @@ robuffer Reorder_Buffer(
 
   .rob_store_flag(rob_store_flag),
   .rob_store_lsbpos(rob_store_lsbpos),
+  .rob_head(rob_head),
   .lsb_in_flag(lsb_load_flag),
   .lsb_val(lsb_load_val),
   .lsb_robpos(lsb_load_robpos),
@@ -492,6 +494,7 @@ lsbuffer LoadStore_buffer(
 
   .rob_store_flag(rob_store_flag),
   .rob_store_lsbpos(rob_store_lsbpos),
+  .rob_head(rob_head),
 
   .alu_flag(alu_flag),
   .alu_val(alu_val),

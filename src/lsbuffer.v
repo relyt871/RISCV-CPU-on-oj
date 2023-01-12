@@ -34,6 +34,7 @@ module lsbuffer (
     //update from ROB commit
     input wire rob_store_flag,
     input wire [`LSB_LEN] rob_store_lsbpos,
+    input wire [`ROB_LEN] rob_head,
 
     //update from ALU
     input wire alu_flag,
@@ -70,6 +71,7 @@ module lsbuffer (
         end
         else begin
             lsb_avail <= 0;
+            lsb_avail_pos <= 0;
         end
     end
     
@@ -79,7 +81,6 @@ module lsbuffer (
             tail <= 0;
             siz <= 0;
             lsb_full <= 0;
-            lsb_avail <= 0;
             mem_out_flag <= 0;
             lsb_out_flag <= 0;
         end
@@ -105,7 +106,7 @@ module lsbuffer (
                 cancommit[rob_store_lsbpos] <= 1;
             end
             if (alu_flag) begin
-                for (i = head; i != tail; i = ((i == `LSB_MAX)? 0 : i + 1)) begin
+                for (i = 0; i < `LSB_SIZ; i = i + 1) begin
                     if (lsb_qj[i] && lsb_vj[i][`ROB_LEN] == alu_robpos) begin
                         lsb_vj[i] <= alu_val;
                         lsb_qj[i] <= 0;
@@ -117,7 +118,7 @@ module lsbuffer (
                 end
             end
             if (load_flag) begin
-                for (i = head; i != tail; i = ((i == `LSB_MAX)? 0 : i + 1)) begin
+                for (i = 0; i < `LSB_SIZ; i = i + 1) begin
                     if (lsb_qj[i] && lsb_vj[i][`ROB_LEN] == load_robpos) begin
                         lsb_vj[i] <= load_val;
                         lsb_qj[i] <= 0;
@@ -184,7 +185,13 @@ module lsbuffer (
             else if (head != tail && !lsb_qj[head] && !lsb_qk[head]) begin
                 case (lsb_op[head])
                     `LB, `LH, `LW, `LBU, `LHU: begin
-                        if (mem_in_flag) begin
+                        if (lsb_vj[head] + lsb_imm[head] >= `IO_LIM && lsb_robpos[head] != rob_head) begin  //input corner case
+                            mem_out_flag <= 0;
+                            lsb_out_flag <= 0;
+                            siz <= siz + push;
+                            lsb_full <= (siz + push == `LSB_MAX);
+                        end
+                        else if (mem_in_flag) begin
                             mem_out_flag <= 0;
                             head <= ((head == `LSB_MAX)? 0 : head + 1);
                             siz <= siz + push - 1;

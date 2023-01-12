@@ -46,6 +46,7 @@ module robuffer (
     //commit to load-store-buffer
     output reg rob_store_flag,
     output reg [`ROB_LEN] rob_store_lsbpos,
+    output wire [`ROB_LEN] rob_head,
 
     //input from lsb load
     input wire lsb_in_flag,
@@ -73,6 +74,8 @@ module robuffer (
     reg [`ROB_LEN] head, tail;
     integer i, siz;
 
+    assign rob_head = head;
+
     //provide available pos to new ins
     always @(*) begin  
         if (getpos) begin
@@ -81,6 +84,7 @@ module robuffer (
         end
         else begin
             rob_avail <= 0;
+            rob_avail_pos <= 0;
         end
     end
 
@@ -91,6 +95,7 @@ module robuffer (
         end
         else begin
             rs1_ok <= 0;
+            rs1_val <= 0;
         end
     end
 
@@ -101,6 +106,7 @@ module robuffer (
         end
         else begin
             rs2_ok <= 0;
+            rs2_val <= 0;
         end
     end
 
@@ -112,8 +118,6 @@ module robuffer (
             siz <= 0;
             rob_full <= 0;
             unlock <= 0;
-            rs1_ok <= 0;
-            rs2_ok <= 0;
             rob_store_flag <= 0;
             jump <= 0;
         end
